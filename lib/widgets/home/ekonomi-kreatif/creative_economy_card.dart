@@ -17,30 +17,37 @@ class CreativeEconomyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Debug image info at widget level
+    print('=== Creative Economy Card Debug ===');
+    print('Building card for: ${creativeEconomy.name}');
+    print('Featured Image: ${creativeEconomy.featuredImage}');
+    print('Valid Image URL: ${creativeEconomy.validImageUrl}');
+    print('===================================');
+
     return Container(
-      width: isHorizontal ? 260 : double.infinity, // Reduced width
-      height: isHorizontal ? 280 : null, // Fixed height for horizontal
+      width: isHorizontal ? 260 : double.infinity,
+      height: isHorizontal ? 280 : null,
       margin: EdgeInsets.only(
         right: isHorizontal ? 16 : 0,
-        bottom: isHorizontal ? 0 : 12, // Reduced margin
+        bottom: isHorizontal ? 0 : 12,
         left: isHorizontal ? 0 : 20,
         top: isHorizontal ? 0 : 0,
       ),
       child: Card(
-        elevation: 6, // Reduced elevation
+        elevation: 6,
         shadowColor: Colors.black.withOpacity(0.1),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12), // Reduced radius
+          borderRadius: BorderRadius.circular(12),
         ),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min, // Important: prevent overflow
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildImageSection(),
-              Flexible( // Use Flexible instead of fixed padding
+              Flexible(
                 child: _buildContentSection(),
               ),
             ],
@@ -56,7 +63,7 @@ class CreativeEconomyCard extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            height: isHorizontal ? 120 : 140, // Reduced height
+            height: isHorizontal ? 120 : 140,
             width: double.infinity,
             child: _buildImage(),
           ),
@@ -67,21 +74,41 @@ class CreativeEconomyCard extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    if (creativeEconomy.featuredImage != null && 
-        creativeEconomy.featuredImage!.isNotEmpty &&
-        Uri.tryParse(creativeEconomy.featuredImage!) != null) {
+    final imageUrl = creativeEconomy.validImageUrl;
+    
+    print('Building image with URL: $imageUrl');
+    
+    // Check if we have a valid image URL
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      print('Using CachedNetworkImage for: $imageUrl');
       
       return CachedNetworkImage(
-        imageUrl: creativeEconomy.featuredImage!,
+        imageUrl: imageUrl,
         fit: BoxFit.cover,
-        placeholder: (context, url) => _buildLoadingPlaceholder(),
-        errorWidget: (context, url, error) => _buildPlaceholderImage(),
-        fadeInDuration: Duration(milliseconds: 200),
-        fadeOutDuration: Duration(milliseconds: 200),
-        memCacheWidth: 400, // Optimize memory usage
+        placeholder: (context, url) {
+          print('Loading placeholder for: $url');
+          return _buildLoadingPlaceholder();
+        },
+        errorWidget: (context, url, error) {
+          print('Error loading image: $url');
+          print('Error details: $error');
+          return _buildErrorPlaceholder();
+        },
+        fadeInDuration: Duration(milliseconds: 300),
+        fadeOutDuration: Duration(milliseconds: 300),
+        memCacheWidth: 400,
         memCacheHeight: 300,
+        httpHeaders: {
+          'Cache-Control': 'max-age=3600',
+          'User-Agent': 'Flutter App',
+        },
+        // Add timeout and retry options
+        cacheManager: null, // Use default cache manager
+        useOldImageOnUrlChange: false,
+        filterQuality: FilterQuality.medium,
       );
     } else {
+      print('No valid image URL, using placeholder');
       return _buildPlaceholderImage();
     }
   }
@@ -89,16 +116,80 @@ class CreativeEconomyCard extends StatelessWidget {
   Widget _buildLoadingPlaceholder() {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFF7FAFC),
+        gradient: LinearGradient(
+          colors: [Color(0xFFF7FAFC), Color(0xFFEDF2F7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: Center(
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Memuat gambar...',
+              style: TextStyle(
+                fontSize: 10,
+                color: Color(0xFF718096),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFE53E3E), Color(0xFFC53030)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 24,
+              color: Colors.white.withOpacity(0.8),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Gagal memuat gambar',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 2),
+            Text(
+              creativeEconomy.name,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 8,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -134,7 +225,7 @@ class CreativeEconomyCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -180,6 +271,13 @@ class CreativeEconomyCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: colors),
         borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withOpacity(0.3),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -201,10 +299,10 @@ class CreativeEconomyCard extends StatelessWidget {
 
   Widget _buildContentSection() {
     return Padding(
-      padding: EdgeInsets.all(12), // Reduced padding
+      padding: EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Prevent overflow
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildTitle(),
           SizedBox(height: 4),
@@ -224,7 +322,7 @@ class CreativeEconomyCard extends StatelessWidget {
     return Text(
       creativeEconomy.name,
       style: TextStyle(
-        fontSize: 14, // Reduced font size
+        fontSize: 14,
         fontWeight: FontWeight.bold,
         color: Color(0xFF2D3748),
       ),
@@ -237,11 +335,11 @@ class CreativeEconomyCard extends StatelessWidget {
     return Text(
       creativeEconomy.shortDescription!,
       style: TextStyle(
-        fontSize: 11, // Reduced font size
+        fontSize: 11,
         color: Color(0xFF718096),
         height: 1.3,
       ),
-      maxLines: 1, // Reduced max lines
+      maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -365,7 +463,7 @@ class CreativeEconomyCard extends StatelessWidget {
     return Wrap(
       spacing: 4,
       runSpacing: 4,
-      children: features.take(2).toList(), // Limit to 2 features
+      children: features.take(2).toList(),
     );
   }
 

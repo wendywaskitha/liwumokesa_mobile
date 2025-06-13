@@ -8,6 +8,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/creative_economy_screen.dart';
+import 'screens/creative_economy_detail_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -34,6 +35,10 @@ class MyApp extends StatelessWidget {
           '/login': (context) => LoginScreen(),
           '/home': (context) => HomeScreen(),
           '/creative-economy': (context) => const CreativeEconomyScreen(),
+          '/creative-economy-detail': (context) {
+            final id = ModalRoute.of(context)!.settings.arguments as int;
+            return CreativeEconomyDetailScreen(id: id);
+          },
         },
       ),
     );
