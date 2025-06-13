@@ -1496,7 +1496,12 @@ class _CreativeEconomyDetailScreenState
           if (cleanPath.startsWith('/')) {
             cleanPath = cleanPath.substring(1);
           }
-          imageUrl = 'http://10.0.2.2:8000/storage/$cleanPath';
+          // PERBAIKAN: Pastikan path storage benar
+          if (cleanPath.startsWith('storage/')) {
+            imageUrl = 'http://10.0.2.2:8000/$cleanPath';
+          } else {
+            imageUrl = 'http://10.0.2.2:8000/storage/$cleanPath';
+          }
         }
       }
     }
@@ -1510,7 +1515,12 @@ class _CreativeEconomyDetailScreenState
         placeholder: (context, url) => _buildProductImagePlaceholder(),
         errorWidget: (context, url, error) {
           print('Error loading product image: $error');
+          print('Failed URL: $url');
           return _buildProductImagePlaceholder();
+        },
+        // Tambahkan headers untuk debugging
+        httpHeaders: {
+          'User-Agent': 'Flutter App',
         },
       );
     } else {
@@ -1519,23 +1529,38 @@ class _CreativeEconomyDetailScreenState
   }
 
   Widget _buildProductImagePlaceholder() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+  return Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
-      child: Center(
-        child: Icon(
-          Icons.shopping_bag,
-          size: 32,
-          color: Colors.white.withOpacity(0.8),
-        ),
+    ),
+    child: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.shopping_bag,
+            size: 32,
+            color: Colors.white.withOpacity(0.8),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Gambar Produk',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   String _formatPrice(dynamic price) {
     if (price == null) return '0';
@@ -1611,17 +1636,7 @@ class _CreativeEconomyDetailScreenState
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: product['featured_image'] != null &&
-                              product['featured_image'].isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: product['featured_image'],
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  _buildProductImagePlaceholder(),
-                              errorWidget: (context, url, error) =>
-                                  _buildProductImagePlaceholder(),
-                            )
-                          : _buildProductImagePlaceholder(),
+                      child: _buildProductImage(product),
                     ),
                   ),
                   SizedBox(height: 20),
