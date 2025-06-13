@@ -5,6 +5,7 @@ import 'dart:ui';
 import '../providers/auth_provider.dart';
 import '../providers/destination_provider.dart';
 import '../providers/creative_economy_provider.dart';
+import '../providers/accommodation_provider.dart';
 import '../widgets/destination_card.dart';
 import '../models/destination.dart';
 import '../widgets/home/search_section.dart';
@@ -15,6 +16,7 @@ import '../widgets/home/destinations_list.dart';
 import '../widgets/home/stats_cards.dart';
 import '../widgets/home/error_section.dart';
 import '../widgets/home/ekonomi-kreatif/creative_economy_section.dart';
+import '../widgets/home/akomodasi/accommodation_section.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -52,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           .loadDestinations(refresh: true);
       Provider.of<CreativeEconomyProvider>(context, listen: false)
           .loadFeaturedCreativeEconomies();
+      Provider.of<AccommodationProvider>(context, listen: false) // Add this
+          .loadAccommodations(refresh: true, perPage: 5);
     });
   }
 
@@ -67,10 +71,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF8FAFC),
-      body:
-          Consumer3<AuthProvider, DestinationProvider, CreativeEconomyProvider>(
+      body: Consumer4<AuthProvider, DestinationProvider,
+          CreativeEconomyProvider, AccommodationProvider>(
         builder: (context, authProvider, destinationProvider,
-            creativeEconomyProvider, child) {
+            creativeEconomyProvider, accommodationProvider, child) {
           if (_fadeAnimation == null) {
             return Center(
               child: CircularProgressIndicator(
@@ -102,6 +106,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 SliverToBoxAdapter(
                   child: CreativeEconomySection(),
+                ),
+                SliverToBoxAdapter(
+                  child: AccommodationSection(),
                 ),
                 SliverToBoxAdapter(
                   child:

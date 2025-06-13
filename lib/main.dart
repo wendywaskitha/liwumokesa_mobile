@@ -9,6 +9,9 @@ import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/creative_economy_screen.dart';
 import 'screens/creative_economy_detail_screen.dart';
+import 'providers/accommodation_provider.dart';
+import 'screens/accommodation_screen.dart';
+import 'screens/accommodation_detail_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,6 +25,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DestinationProvider()),
         ChangeNotifierProvider(create: (_) => CreativeEconomyProvider()),
+        ChangeNotifierProvider(create: (_) => AccommodationProvider()),
       ],
       child: MaterialApp(
         title: 'Visit Liwu Mokesa',
@@ -38,6 +42,11 @@ class MyApp extends StatelessWidget {
           '/creative-economy-detail': (context) {
             final id = ModalRoute.of(context)!.settings.arguments as int;
             return CreativeEconomyDetailScreen(id: id);
+          },
+          '/accommodation': (context) => const AccommodationScreen(), // Add this
+          '/accommodation-detail': (context) { // Add this
+            final id = ModalRoute.of(context)!.settings.arguments as int;
+            return AccommodationDetailScreen(id: id);
           },
         },
       ),
