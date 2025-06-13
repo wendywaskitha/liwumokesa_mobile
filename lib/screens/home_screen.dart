@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../providers/auth_provider.dart';
 import '../providers/destination_provider.dart';
+import '../providers/creative_economy_provider.dart';
 import '../widgets/destination_card.dart';
 import '../models/destination.dart';
 import '../widgets/home/search_section.dart';
@@ -13,6 +14,7 @@ import '../widgets/home/trending_section.dart';
 import '../widgets/home/destinations_list.dart';
 import '../widgets/home/stats_cards.dart';
 import '../widgets/home/error_section.dart';
+import '../widgets/home/ekonomi-kreatif/creative_economy_section.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -48,6 +50,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DestinationProvider>(context, listen: false)
           .loadDestinations(refresh: true);
+      Provider.of<CreativeEconomyProvider>(context, listen: false)
+          .loadFeaturedCreativeEconomies();
     });
   }
 
@@ -63,8 +67,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF8FAFC),
-      body: Consumer2<AuthProvider, DestinationProvider>(
-        builder: (context, authProvider, destinationProvider, child) {
+      body:
+          Consumer3<AuthProvider, DestinationProvider, CreativeEconomyProvider>(
+        builder: (context, authProvider, destinationProvider,
+            creativeEconomyProvider, child) {
           if (_fadeAnimation == null) {
             return Center(
               child: CircularProgressIndicator(
@@ -93,6 +99,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 SliverToBoxAdapter(
                   child:
                       FeaturedSection(destinationProvider: destinationProvider),
+                ),
+                SliverToBoxAdapter(
+                  child: CreativeEconomySection(),
                 ),
                 SliverToBoxAdapter(
                   child:
