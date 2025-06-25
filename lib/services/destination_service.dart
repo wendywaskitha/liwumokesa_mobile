@@ -5,7 +5,6 @@ import '../models/destination.dart';
 import 'api_service.dart';
 
 class DestinationService extends ApiService {
-  
   Future<Map<String, dynamic>> getDestinations({
     int page = 1,
     int perPage = 10,
@@ -25,10 +24,10 @@ class DestinationService extends ApiService {
         'sort_order': sortOrder,
       };
 
-      if (search != null) queryParams['search'] = search;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (categoryId != null) queryParams['category_id'] = categoryId.toString();
       if (districtId != null) queryParams['district_id'] = districtId.toString();
-      if (type != null) queryParams['type'] = type;
+      if (type != null && type.isNotEmpty) queryParams['type'] = type;
       if (featured != null) queryParams['featured'] = featured.toString();
 
       final uri = Uri.parse('$baseUrl/wisatawan/destinations').replace(
@@ -39,15 +38,13 @@ class DestinationService extends ApiService {
 
       final headers = await getHeaders(withAuth: await isLoggedIn());
       final response = await http.get(uri, headers: headers);
-      
+
       print('Response status: ${response.statusCode}');
       print('Response body length: ${response.body.length}');
 
       final responseData = handleResponse(response);
-      
-      // Parse destinations dengan error handling yang lebih robust
-      return _parseDestinationResponse(responseData);
 
+      return _parseDestinationResponse(responseData);
     } catch (e) {
       print('Error in getDestinations: $e');
       rethrow;
@@ -56,7 +53,6 @@ class DestinationService extends ApiService {
 
   Map<String, dynamic> _parseDestinationResponse(Map<String, dynamic> responseData) {
     try {
-      // Berdasarkan response API yang Anda berikan
       if (!responseData.containsKey('data')) {
         throw Exception('Response does not contain data field');
       }
@@ -66,7 +62,6 @@ class DestinationService extends ApiService {
         throw Exception('Data field is not a Map');
       }
 
-      // Extract destinations array
       if (!dataField.containsKey('data') || dataField['data'] is! List) {
         throw Exception('Data field does not contain destinations array');
       }
@@ -74,7 +69,6 @@ class DestinationService extends ApiService {
       final destinationsData = dataField['data'] as List;
       print('Found ${destinationsData.length} destinations in response');
 
-      // Parse each destination with individual error handling
       List<Destination> destinations = [];
       for (int i = 0; i < destinationsData.length; i++) {
         try {
@@ -88,11 +82,9 @@ class DestinationService extends ApiService {
           }
         } catch (e) {
           print('Error parsing destination at index $i: $e');
-          // Continue dengan destinasi lainnya
         }
       }
 
-      // Extract pagination info
       final paginationData = {
         'current_page': dataField['current_page'] ?? 1,
         'last_page': dataField['last_page'] ?? 1,
@@ -107,41 +99,104 @@ class DestinationService extends ApiService {
         'destinations': destinations,
         'pagination': paginationData,
       };
-
     } catch (e) {
       print('Error in _parseDestinationResponse: $e');
       rethrow;
     }
   }
 
-  // Method lainnya tetap sama
   Future<Destination> getDestination(int id) async {
-    final url = Uri.parse('$baseUrl/wisatawan/destinations/$id');
-    final headers = await getHeaders(withAuth: await isLoggedIn());
+    try {
+      final url = Uri.parse('$baseUrl/wisatawan/destinations/$id');
+      final headers = await getHeaders(withAuth: await isLoggedIn());
 
-    final response = await http.get(url, headers: headers);
-    final responseData = handleResponse(response);
+      print('Making request to get destination: $url');
 
-    if (responseData.containsKey('data') && responseData['data'] is Map) {
-      return Destination.fromJson(responseData['data']);
-    } else {
-      throw Exception('Invalid destination response format');
+      final response = await http.get(url, headers: headers);
+
+      print('Get destination response status: ${response.statusCode}');
+      print('Get destination response body: ${response.body}');
+
+      final responseData = handleResponse(response);
+
+      if (responseData.containsKey('data') && responseData['data'] is Map<String, dynamic>) {
+        return Destination.fromJson(responseData['data'] as Map<String, dynamic>);
+      } else {
+        throw Exception('Invalid destination response format');
+      }
+    } catch (e) {
+      print('Error in getDestination: $e');
+      rethrow;
     }
   }
 
   Future<List<Destination>> getNearbyDestinations(int id) async {
-    final url = Uri.parse('$baseUrl/wisatawan/destinations/$id/nearby');
-    final headers = await getHeaders(withAuth: await isLoggedIn());
+    try {
+      final url = Uri.parse('$baseUrl/wisatawan/destinations/$id/nearby');
+      final headers = await getHeaders(withAuth: await isLoggedIn());
 
-    final response = await http.get(url, headers: headers);
-    final responseData = handleResponse(response);
+      print('Making request to get nearby destinations: $url');
 
-    if (responseData.containsKey('data') && responseData['data'] is List) {
-      return (responseData['data'] as List)
-          .map((json) => Destination.fromJson(json))
-          .toList();
-    } else {
-      throw Exception('Invalid nearby destinations response format');
+      final response = await http.get(url, headers: headers);
+
+      print('Nearby destinations response status: ${response.statusCode}');
+      print('Nearby destinations response body: ${response.body}');
+
+      final responseData = handleResponse(response);
+
+      List<Destination> nearbyDestinations = [];
+
+      if (responseData.containsKey('data')) {
+        final data = responseData['data'];
+        
+        // Jika data adalah List langsung
+        if (data is List) {
+          print('Processing nearby destinations as direct list');
+          for (int i = 0; i < data.length; i++) {
+            try {
+              final destinationJson = data[i];
+              if (destinationJson is Map<String, dynamic>) {
+                final destination = Destination.fromJson(destinationJson);
+                nearbyDestinations.add(destination);
+                print('Successfully parsed nearby destination: ${destination.name}');
+              } else {
+                print('Warning: Nearby destination at index $i is not a Map');
+              }
+            } catch (e) {
+              print('Error parsing nearby destination at index $i: $e');
+            }
+          }
+        }
+        // Jika data memiliki struktur nested
+        else if (data is Map<String, dynamic> && data.containsKey('data')) {
+          print('Processing nearby destinations as nested structure');
+          final destinationsData = data['data'];
+          if (destinationsData is List) {
+            for (int i = 0; i < destinationsData.length; i++) {
+              try {
+                final destinationJson = destinationsData[i];
+                if (destinationJson is Map<String, dynamic>) {
+                  final destination = Destination.fromJson(destinationJson);
+                  nearbyDestinations.add(destination);
+                  print('Successfully parsed nearby destination: ${destination.name}');
+                } else {
+                  print('Warning: Nearby destination at index $i is not a Map');
+                }
+              } catch (e) {
+                print('Error parsing nearby destination at index $i: $e');
+              }
+            }
+          }
+        }
+      }
+
+      print('Successfully parsed ${nearbyDestinations.length} nearby destinations');
+      return nearbyDestinations;
+
+    } catch (e) {
+      print('Error in getNearbyDestinations: $e');
+      // Return empty list untuk avoid crash
+      return [];
     }
   }
 }

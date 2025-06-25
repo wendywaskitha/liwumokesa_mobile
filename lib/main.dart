@@ -12,6 +12,8 @@ import 'screens/creative_economy_detail_screen.dart';
 import 'providers/accommodation_provider.dart';
 import 'screens/accommodation_screen.dart';
 import 'screens/accommodation_detail_screen.dart';
+import 'screens/destination_screen.dart';
+import 'screens/destination_detail_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -38,13 +40,21 @@ class MyApp extends StatelessWidget {
           '/': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
           '/home': (context) => HomeScreen(),
+          '/destinations': (context) => DestinationScreen(),
+          '/destination-detail': (context) {
+            final destinationId =
+                ModalRoute.of(context)!.settings.arguments as int;
+            return DestinationDetailScreen(destinationId: destinationId);
+          },
           '/creative-economy': (context) => const CreativeEconomyScreen(),
           '/creative-economy-detail': (context) {
             final id = ModalRoute.of(context)!.settings.arguments as int;
             return CreativeEconomyDetailScreen(id: id);
           },
-          '/accommodation': (context) => const AccommodationScreen(), // Add this
-          '/accommodation-detail': (context) { // Add this
+          '/accommodation': (context) =>
+              const AccommodationScreen(), // Add this
+          '/accommodation-detail': (context) {
+            // Add this
             final id = ModalRoute.of(context)!.settings.arguments as int;
             return AccommodationDetailScreen(id: id);
           },
