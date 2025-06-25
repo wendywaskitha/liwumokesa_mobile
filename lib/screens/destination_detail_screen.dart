@@ -4,7 +4,17 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/destination.dart';
 import '../providers/destination_provider.dart';
-import '../widgets/home/destinasi/destination_card.dart';
+import '../widgets/destination_detail/destination_header.dart';
+import '../widgets/destination_detail/destination_info.dart';
+import '../widgets/destination_detail/destination_description.dart';
+import '../widgets/destination_detail/destination_facilities.dart';
+import '../widgets/destination_detail/destination_accommodations.dart';
+import '../widgets/destination_detail/destination_culinaries.dart';
+import '../widgets/destination_detail/destination_transportations.dart';
+import '../widgets/destination_detail/destination_creative_economies.dart';
+import '../widgets/destination_detail/destination_nearby.dart';
+import '../widgets/destination_detail/destination_gallery.dart';
+import '../widgets/destination_detail/destination_reviews.dart';
 
 class DestinationDetailScreen extends StatefulWidget {
   final int destinationId;
@@ -15,13 +25,11 @@ class DestinationDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<DestinationDetailScreen> createState() =>
-      _DestinationDetailScreenState();
+  State<DestinationDetailScreen> createState() => _DestinationDetailScreenState();
 }
 
 class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
   Destination? destination;
-  List<Destination> nearbyDestinations = [];
   bool isLoading = true;
   String? error;
 
@@ -39,53 +47,19 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       });
 
       final provider = Provider.of<DestinationProvider>(context, listen: false);
-
-      // Load destination detail
+      
       print('Loading destination detail for ID: ${widget.destinationId}');
       final dest = await provider.getDestination(widget.destinationId);
-
+      
       if (dest != null) {
-        setState(() {
-          destination = dest;
-        });
+        destination = dest;
         print('Successfully loaded destination: ${dest.name}');
-
-        // Load nearby destinations dengan error handling yang lebih baik
-        try {
-          print('Loading nearby destinations...');
-          final nearby =
-              await provider.getNearbyDestinations(widget.destinationId);
-
-          // Pastikan nearby tidak null dan handle berbagai kemungkinan return type
-          if (nearby != null) {
-            setState(() {
-              nearbyDestinations = List<Destination>.from(nearby);
-            });
-            print(
-                'Successfully loaded ${nearbyDestinations.length} nearby destinations');
-          } else {
-            setState(() {
-              nearbyDestinations = [];
-            });
-            print('No nearby destinations found (null returned)');
-          }
-        } catch (nearbyError) {
-          print('Error loading nearby destinations: $nearbyError');
-          setState(() {
-            nearbyDestinations = [];
-          });
-          // Tidak set error karena destinasi utama sudah berhasil dimuat
-        }
       } else {
-        setState(() {
-          error = 'Destinasi tidak ditemukan';
-        });
+        error = 'Destinasi tidak ditemukan';
       }
     } catch (e) {
       print('Error in _loadDestinationDetail: $e');
-      setState(() {
-        error = e.toString();
-      });
+      error = e.toString();
     } finally {
       if (mounted) {
         setState(() {
@@ -266,39 +240,8 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar dengan gambar
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.white,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: 'destination-${destination!.id}',
-                child: _buildHeaderImage(),
-              ),
-            ),
-            actions: [
-              Container(
-                margin: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.favorite_border),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Fitur wishlist akan segera hadir!'),
-                        backgroundColor: Color(0xFF667EEA),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+          // Header dengan gambar
+          DestinationHeader(destination: destination!),
 
           // Content
           SliverToBoxAdapter(
@@ -313,10 +256,16 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDestinationInfo(),
-                  _buildDescription(),
-                  _buildFacilities(),
-                  _buildNearbyDestinations(),
+                  DestinationInfo(destination: destination!),
+                  DestinationDescription(destination: destination!),
+                  DestinationFacilities(destination: destination!),
+                  DestinationGallery(destination: destination!),
+                  DestinationAccommodations(destination: destination!),
+                  DestinationCulinaries(destination: destination!),
+                  DestinationTransportations(destination: destination!),
+                  DestinationCreativeEconomies(destination: destination!),
+                  DestinationReviews(destination: destination!),
+                  DestinationNearby(destinationId: widget.destinationId),
                   SizedBox(height: 100), // Space for floating button
                 ],
               ),
@@ -341,481 +290,5 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildHeaderImage() {
-    if (destination!.featuredImage != null &&
-        destination!.featuredImage!.isNotEmpty) {
-      String imageUrl =
-          'http://10.0.2.2:8000/storage/${destination!.featuredImage}';
-
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.grey.shade200, Colors.grey.shade300],
-            ),
-          ),
-          child: Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(Color(0xFF667EEA)),
-            ),
-          ),
-        ),
-        errorWidget: (context, url, error) => Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.grey.shade300, Colors.grey.shade400],
-            ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.landscape, size: 64, color: Colors.white),
-                SizedBox(height: 8),
-                Text(
-                  'No Image Available',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey.shade300, Colors.grey.shade400],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.landscape, size: 64, color: Colors.white),
-              SizedBox(height: 8),
-              Text(
-                'No Image Available',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildDestinationInfo() {
-    return Padding(
-      padding: EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  destination!.name,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
-              ),
-              if (destination!.isFeatured)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.orange, Colors.deepOrange],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Featured',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: 8),
-          if (destination!.location != null)
-            Row(
-              children: [
-                Icon(Icons.location_on, color: Colors.grey.shade600, size: 20),
-                SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    destination!.location!,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          SizedBox(height: 16),
-          Row(
-            children: [
-              if (destination!.category != null)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF667EEA).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    destination!.category!.name,
-                    style: TextStyle(
-                      color: Color(0xFF667EEA),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: destination!.entranceFee == null ||
-                          destination!.entranceFee == 0
-                      ? Colors.green.shade100
-                      : Colors.blue.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  destination!.entranceFee == null ||
-                          destination!.entranceFee == 0
-                      ? 'GRATIS'
-                      : 'Rp ${destination!.entranceFee!.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: destination!.entranceFee == null ||
-                            destination!.entranceFee == 0
-                        ? Colors.green.shade700
-                        : Colors.blue.shade700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDescription() {
-    if (destination!.description == null || destination!.description!.isEmpty) {
-      return SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Deskripsi',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          SizedBox(height: 12),
-          Text(
-            destination!.description!,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade700,
-              height: 1.6,
-            ),
-          ),
-          SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFacilities() {
-    if (destination!.facilities == null || destination!.facilities!.isEmpty) {
-      return SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Fasilitas',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: destination!.facilities!.map((facility) {
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  facility['name'] ?? 'Fasilitas',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNearbyDestinations() {
-    // Jika list kosong, jangan tampilkan section ini
-    if (nearbyDestinations.isEmpty) {
-      return SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Destinasi Terdekat',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3748),
-                ),
-              ),
-              Text(
-                '${nearbyDestinations.length} destinasi',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 12),
-        Container(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            itemCount: nearbyDestinations.length,
-            itemBuilder: (context, index) {
-              final nearby = nearbyDestinations[index];
-              return Container(
-                width: 160,
-                margin: EdgeInsets.only(right: 16),
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DestinationDetailScreen(
-                            destinationId: nearby.id,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Image
-                        Container(
-                          height: 100,
-                          width: double.infinity,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
-                            ),
-                            child: _buildNearbyImage(nearby),
-                          ),
-                        ),
-
-                        // Content
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  nearby.name,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2D3748),
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-
-                                if (nearby.location != null) ...[
-                                  SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.location_on,
-                                        size: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      SizedBox(width: 2),
-                                      Expanded(
-                                        child: Text(
-                                          nearby.location!,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-
-                                Spacer(),
-
-                                // Price
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: nearby.entranceFee == null ||
-                                            nearby.entranceFee == 0
-                                        ? Colors.green.shade100
-                                        : Colors.blue.shade100,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    nearby.entranceFee == null ||
-                                            nearby.entranceFee == 0
-                                        ? 'GRATIS'
-                                        : 'Rp ${nearby.entranceFee!.toStringAsFixed(0)}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: nearby.entranceFee == null ||
-                                              nearby.entranceFee == 0
-                                          ? Colors.green.shade700
-                                          : Colors.blue.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        SizedBox(height: 24),
-      ],
-    );
-  }
-
-  Widget _buildNearbyImage(Destination destination) {
-    if (destination.featuredImage != null &&
-        destination.featuredImage!.isNotEmpty) {
-      String imageUrl =
-          'http://10.0.2.2:8000/storage/${destination.featuredImage}';
-
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: Colors.grey.shade300,
-          child: Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(Color(0xFF667EEA)),
-              strokeWidth: 2,
-            ),
-          ),
-        ),
-        errorWidget: (context, url, error) => Container(
-          color: Colors.grey.shade300,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.image, size: 24, color: Colors.grey.shade500),
-              SizedBox(height: 4),
-              Text(
-                'No Image',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        color: Colors.grey.shade300,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.landscape, size: 24, color: Colors.grey.shade500),
-            SizedBox(height: 4),
-            Text(
-              'No Image',
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
   }
 }
