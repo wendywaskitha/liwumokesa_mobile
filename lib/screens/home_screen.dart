@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui';
 import '../providers/auth_provider.dart';
+import '../providers/culinary_provider.dart';
 import '../providers/destination_provider.dart';
 import '../providers/creative_economy_provider.dart';
 import '../providers/accommodation_provider.dart';
@@ -17,6 +18,7 @@ import '../widgets/home/stats_cards.dart';
 import '../widgets/home/error_section.dart';
 import '../widgets/home/ekonomi-kreatif/creative_economy_section.dart';
 import '../widgets/home/akomodasi/accommodation_section.dart';
+import '../widgets/home/kuliner/culinary_section.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -80,6 +82,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       await Future.wait([
         Provider.of<DestinationProvider>(context, listen: false)
             .loadDestinations(refresh: true),
+        Provider.of<CulinaryProvider>(context, listen: false) // Tambahkan ini
+            .loadRecommendedCulinaries(),
         Provider.of<CreativeEconomyProvider>(context, listen: false)
             .loadFeaturedCreativeEconomies(),
         Provider.of<AccommodationProvider>(context, listen: false)
@@ -98,9 +102,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF8FAFC),
-      body: Consumer4<AuthProvider, DestinationProvider,
+      body: Consumer5<AuthProvider, DestinationProvider, CulinaryProvider,
           CreativeEconomyProvider, AccommodationProvider>(
-        builder: (context, authProvider, destinationProvider,
+        builder: (context, authProvider, destinationProvider, culinaryProvider,
             creativeEconomyProvider, accommodationProvider, child) {
           if (_fadeAnimation == null) {
             return Center(
@@ -134,7 +138,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   SliverToBoxAdapter(child: QuickActions()),
                   SliverToBoxAdapter(
-                    child: FeaturedSection(destinationProvider: destinationProvider),
+                    child: FeaturedSection(
+                        destinationProvider: destinationProvider),
+                  ),
+                  SliverToBoxAdapter(
+                    child: CulinarySection(), // Tambahkan ini
                   ),
                   SliverToBoxAdapter(
                     child: CreativeEconomySection(),
@@ -143,13 +151,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: AccommodationSection(),
                   ),
                   SliverToBoxAdapter(
-                    child: TrendingSection(destinationProvider: destinationProvider),
+                    child: TrendingSection(
+                        destinationProvider: destinationProvider),
                   ),
                   // Pindahkan "Semua Destinasi" ke sini (setelah trending section)
                   SliverToBoxAdapter(child: _buildModernDestinationsHeader()),
                   if (destinationProvider.error != null)
                     SliverToBoxAdapter(
-                      child: ErrorSection(destinationProvider: destinationProvider),
+                      child: ErrorSection(
+                          destinationProvider: destinationProvider),
                     ),
                   _buildDestinationsContent(destinationProvider),
                   SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -391,7 +401,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 SizedBox(height: 16),
-                Text('Terjadi Kesalahan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Terjadi Kesalahan',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text(provider.error!, textAlign: TextAlign.center),
                 SizedBox(height: 16),
                 ElevatedButton(
@@ -416,7 +428,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Icon(Icons.explore_off, size: 64, color: Colors.grey.shade400),
                 SizedBox(height: 16),
-                Text('Belum ada destinasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Belum ada destinasi',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text('Coba refresh atau periksa koneksi internet'),
               ],
             ),
@@ -451,7 +465,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Color(0xFF667EEA).withOpacity(0.2)),
+                    border:
+                        Border.all(color: Color(0xFF667EEA).withOpacity(0.2)),
                   ),
                   child: Center(
                     child: CircularProgressIndicator(
@@ -475,7 +490,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               },
             );
           },
-          childCount: provider.destinations.length + 
+          childCount: provider.destinations.length +
               (provider.hasMore && provider.isLoading ? 1 : 0),
         ),
       ),
@@ -508,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: _buildListItem(destination),
             );
           },
-          childCount: provider.destinations.length + 
+          childCount: provider.destinations.length +
               (provider.hasMore && provider.isLoading ? 1 : 0),
         ),
       ),
@@ -546,34 +561,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: destination.featuredImage != null && destination.featuredImage!.isNotEmpty
+                    child: destination.featuredImage != null &&
+                            destination.featuredImage!.isNotEmpty
                         ? CachedNetworkImage(
-                            imageUrl: 'http://10.0.2.2:8000/storage/${destination.featuredImage}',
+                            imageUrl:
+                                'http://10.0.2.2:8000/storage/${destination.featuredImage}',
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
                               color: Colors.grey.shade300,
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation(Color(0xFF667EEA)),
+                                  valueColor:
+                                      AlwaysStoppedAnimation(Color(0xFF667EEA)),
                                   strokeWidth: 2,
                                 ),
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
                               color: Colors.grey.shade300,
-                              child: Icon(Icons.image, color: Colors.grey.shade500),
+                              child: Icon(Icons.image,
+                                  color: Colors.grey.shade500),
                             ),
                           )
                         : Container(
                             color: Colors.grey.shade300,
-                            child: Icon(Icons.landscape, color: Colors.grey.shade500),
+                            child: Icon(Icons.landscape,
+                                color: Colors.grey.shade500),
                           ),
                   ),
                 ),
               ),
-              
+
               SizedBox(width: 12),
-              
+
               // Content
               Expanded(
                 child: Column(
@@ -595,7 +615,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         if (destination.isFeatured)
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [Colors.orange, Colors.deepOrange],
@@ -613,13 +634,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                       ],
                     ),
-                    
                     SizedBox(height: 4),
-                    
                     if (destination.location != null)
                       Row(
                         children: [
-                          Icon(Icons.location_on, size: 14, color: Colors.grey.shade600),
+                          Icon(Icons.location_on,
+                              size: 14, color: Colors.grey.shade600),
                           SizedBox(width: 2),
                           Expanded(
                             child: Text(
@@ -634,37 +654,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                    
                     SizedBox(height: 8),
-                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: destination.entranceFee == null || destination.entranceFee == 0
+                            color: destination.entranceFee == null ||
+                                    destination.entranceFee == 0
                                 ? Colors.green.shade100
                                 : Colors.blue.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            destination.entranceFee == null || destination.entranceFee == 0
+                            destination.entranceFee == null ||
+                                    destination.entranceFee == 0
                                 ? 'GRATIS'
                                 : 'Rp ${destination.entranceFee!.toStringAsFixed(0)}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: destination.entranceFee == null || destination.entranceFee == 0
+                              color: destination.entranceFee == null ||
+                                      destination.entranceFee == 0
                                   ? Colors.green.shade700
                                   : Colors.blue.shade700,
                               fontSize: 12,
                             ),
                           ),
                         ),
-                        
                         if (destination.category != null)
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Color(0xFF667EEA).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
