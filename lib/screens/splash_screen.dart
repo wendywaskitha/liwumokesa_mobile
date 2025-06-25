@@ -31,31 +31,26 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _initAnimations() {
-    // Logo Animation Controller
     _logoController = AnimationController(
       duration: Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    // Text Animation Controller
     _textController = AnimationController(
       duration: Duration(milliseconds: 1000),
       vsync: this,
     );
 
-    // Progress Animation Controller
     _progressController = AnimationController(
       duration: Duration(milliseconds: 800),
       vsync: this,
     );
 
-    // Background Animation Controller
     _backgroundController = AnimationController(
       duration: Duration(milliseconds: 2000),
       vsync: this,
     );
 
-    // Logo Animations
     _logoScale = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -72,7 +67,6 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeInOut,
     ));
 
-    // Text Animations
     _textFade = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -89,7 +83,6 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeOutBack,
     ));
 
-    // Progress Animation
     _progressFade = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -98,7 +91,6 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeIn,
     ));
 
-    // Background Gradient Animation
     _backgroundGradient = ColorTween(
       begin: Color(0xFF667EEA),
       end: Color(0xFF764BA2),
@@ -109,30 +101,24 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startAnimations() async {
-    // Start background animation immediately
     _backgroundController.repeat(reverse: true);
     
-    // Start logo animation
     await Future.delayed(Duration(milliseconds: 300));
     _logoController.forward();
     
-    // Start text animation
     await Future.delayed(Duration(milliseconds: 800));
     _textController.forward();
     
-    // Start progress animation
     await Future.delayed(Duration(milliseconds: 500));
     _progressController.forward();
   }
 
   Future<void> _checkAuthStatus() async {
-    // Add minimum splash duration for better UX
     await Future.delayed(Duration(milliseconds: 3000));
     
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.checkAuthStatus();
 
-    // Add fade out animation before navigation
     await _logoController.reverse();
     await _textController.reverse();
     await _progressController.reverse();
@@ -175,205 +161,219 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
             child: SafeArea(
-              child: Column(
-                children: [
-                  // Top decorative elements
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      child: Stack(
-                        children: [
-                          // Floating circles decoration
-                          Positioned(
-                            top: 50,
-                            right: 30,
-                            child: _buildFloatingCircle(60, Colors.white.withOpacity(0.1)),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Responsive sizing berdasarkan screen height
+                  double logoSize = constraints.maxHeight < 600 ? 80 : 120;
+                  double titleSize = constraints.maxHeight < 600 ? 24 : 32;
+                  double subtitleSize = constraints.maxHeight < 600 ? 12 : 16;
+                  
+                  return Column(
+                    children: [
+                      // Top decorative elements - Flexible height
+                      Flexible(
+                        flex: 2,
+                        child: Container(
+                          child: Stack(
+                            children: [
+                              // Floating circles decoration
+                              Positioned(
+                                top: 30,
+                                right: 30,
+                                child: _buildFloatingCircle(40, Colors.white.withOpacity(0.1)),
+                              ),
+                              Positioned(
+                                top: 80,
+                                left: 40,
+                                child: _buildFloatingCircle(25, Colors.white.withOpacity(0.05)),
+                              ),
+                              Positioned(
+                                top: 50,
+                                left: 120,
+                                child: _buildFloatingCircle(15, Colors.white.withOpacity(0.08)),
+                              ),
+                            ],
                           ),
-                          Positioned(
-                            top: 120,
-                            left: 40,
-                            child: _buildFloatingCircle(40, Colors.white.withOpacity(0.05)),
-                          ),
-                          Positioned(
-                            top: 80,
-                            left: 120,
-                            child: _buildFloatingCircle(25, Colors.white.withOpacity(0.08)),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
 
-                  // Main content
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Logo with animation
-                        AnimatedBuilder(
-                          animation: _logoController,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _logoScale.value,
-                              child: Transform.rotate(
-                                angle: _logoRotation.value * 0.1,
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 20,
-                                        offset: Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.explore,
-                                          size: 50,
-                                          color: Color(0xFF667EEA),
+                      // Main content - Fixed flex
+                      Expanded(
+                        flex: 4,
+                        child: Center(
+                          child: SingleChildScrollView( // Tambahkan scroll untuk safety
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min, // Penting untuk mencegah overflow
+                              children: [
+                                // Logo with animation
+                                AnimatedBuilder(
+                                  animation: _logoController,
+                                  builder: (context, child) {
+                                    return Transform.scale(
+                                      scale: _logoScale.value,
+                                      child: Transform.rotate(
+                                        angle: _logoRotation.value * 0.1,
+                                        child: Container(
+                                          width: logoSize,
+                                          height: logoSize,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                blurRadius: 20,
+                                                offset: Offset(0, 10),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.explore,
+                                                  size: logoSize * 0.4,
+                                                  color: Color(0xFF667EEA),
+                                                ),
+                                                Text(
+                                                  'LM',
+                                                  style: TextStyle(
+                                                    fontSize: logoSize * 0.13,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF667EEA),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                SizedBox(height: constraints.maxHeight < 600 ? 20 : 40),
+
+                                // App name with animation
+                                SlideTransition(
+                                  position: _textSlide,
+                                  child: FadeTransition(
+                                    opacity: _textFade,
+                                    child: Column(
+                                      children: [
                                         Text(
-                                          'LM',
+                                          'LIWUMOKESA',
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: titleSize,
                                             fontWeight: FontWeight.bold,
-                                            color: Color(0xFF667EEA),
+                                            color: Colors.white,
+                                            letterSpacing: 2,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black.withOpacity(0.3),
+                                                offset: Offset(0, 2),
+                                                blurRadius: 4,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 16, 
+                                            vertical: 6
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: Colors.white.withOpacity(0.3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Tourism & Travel',
+                                            style: TextStyle(
+                                              fontSize: subtitleSize,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w500,
+                                              letterSpacing: 1,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
 
-                        SizedBox(height: 40),
+                                SizedBox(height: constraints.maxHeight < 600 ? 20 : 50),
 
-                        // App name with animation
-                        SlideTransition(
-                          position: _textSlide,
-                          child: FadeTransition(
-                            opacity: _textFade,
-                            child: Column(
-                              children: [
-                                Text(
-                                  'LIWUMOKESA',
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 3,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        offset: Offset(0, 2),
-                                        blurRadius: 4,
+                                // Loading indicator with animation
+                                FadeTransition(
+                                  opacity: _progressFade,
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        width: 30,
+                                        height: 30,
+                                        child: CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          strokeWidth: 3,
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        'Memuat pengalaman amazing...',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.8),
+                                          fontSize: constraints.maxHeight < 600 ? 11 : 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
                                       ),
                                     ],
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Tourism & Travel',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 1,
-                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
+                      ),
 
-                        SizedBox(height: 50),
-
-                        // Loading indicator with animation
-                        FadeTransition(
-                          opacity: _progressFade,
+                      // Bottom section - Flexible height
+                      Flexible(
+                        flex: 1,
+                        child: Container(
+                          alignment: Alignment.bottomCenter,
+                          padding: EdgeInsets.only(bottom: 20),
                           child: Column(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  strokeWidth: 3,
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                'Memuat pengalaman amazing...',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Bottom section
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        // Version info
-                        Container(
-                          margin: EdgeInsets.only(bottom: 30),
-                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 'Discover Amazing Places',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.7),
-                                  fontSize: 12,
+                                  fontSize: constraints.maxHeight < 600 ? 10 : 12,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(height: 4),
                               Text(
                                 'Version 1.0.0',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.5),
-                                  fontSize: 10,
+                                  fontSize: constraints.maxHeight < 600 ? 8 : 10,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           );
@@ -389,7 +389,7 @@ class _SplashScreenState extends State<SplashScreen>
         return Transform.translate(
           offset: Offset(
             0,
-            10 * (_backgroundController.value * 2 - 1),
+            5 * (_backgroundController.value * 2 - 1),
           ),
           child: Container(
             width: size,

@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:liwumokesa_mobile/screens/main_navigation_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/destination_provider.dart';
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => SplashScreen(),
           '/login': (context) => LoginScreen(),
-          '/home': (context) => HomeScreen(),
+          '/home': (context) => MainNavigationScreen(),
           
           // Destinations
           '/destinations': (context) => DestinationScreen(),

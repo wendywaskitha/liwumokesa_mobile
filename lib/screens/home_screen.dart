@@ -58,6 +58,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DestinationProvider>(context, listen: false)
           .loadDestinations(refresh: true);
+      Provider.of<CulinaryProvider>(context, listen: false)
+          .loadRecommendedCulinaries();
       Provider.of<CreativeEconomyProvider>(context, listen: false)
           .loadFeaturedCreativeEconomies();
       Provider.of<AccommodationProvider>(context, listen: false)
@@ -82,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       await Future.wait([
         Provider.of<DestinationProvider>(context, listen: false)
             .loadDestinations(refresh: true),
-        Provider.of<CulinaryProvider>(context, listen: false) // Tambahkan ini
+        Provider.of<CulinaryProvider>(context, listen: false)
             .loadRecommendedCulinaries(),
         Provider.of<CreativeEconomyProvider>(context, listen: false)
             .loadFeaturedCreativeEconomies(),
@@ -126,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   parent: BouncingScrollPhysics(),
                 ),
                 slivers: [
-                  _buildModernSliverAppBar(authProvider),
+                  _buildCompactSliverAppBar(authProvider),
                   SliverToBoxAdapter(
                     child: SearchSection(
                       controller: _searchController,
@@ -142,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         destinationProvider: destinationProvider),
                   ),
                   SliverToBoxAdapter(
-                    child: CulinarySection(), // Tambahkan ini
+                    child: CulinarySection(),
                   ),
                   SliverToBoxAdapter(
                     child: CreativeEconomySection(),
@@ -154,7 +156,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: TrendingSection(
                         destinationProvider: destinationProvider),
                   ),
-                  // Pindahkan "Semua Destinasi" ke sini (setelah trending section)
                   SliverToBoxAdapter(child: _buildModernDestinationsHeader()),
                   if (destinationProvider.error != null)
                     SliverToBoxAdapter(
@@ -162,24 +163,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           destinationProvider: destinationProvider),
                     ),
                   _buildDestinationsContent(destinationProvider),
-                  SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  SliverToBoxAdapter(child: SizedBox(height: 120)), // Extra space for bottom nav
                 ],
               ),
             ),
           );
         },
       ),
-      // Hapus floating action button
     );
   }
 
-  Widget _buildModernSliverAppBar(AuthProvider authProvider) {
+  // Update SliverAppBar untuk lebih compact karena ada bottom navigation
+  Widget _buildCompactSliverAppBar(AuthProvider authProvider) {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 120, // Kurangi dari 140 ke 120
       floating: false,
       pinned: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
+      automaticallyImplyLeading: false, // Hilangkan back button
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -191,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           child: SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -210,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ],
                         ),
                         child: CircleAvatar(
-                          radius: 25,
+                          radius: 22, // Kurangi dari 25 ke 22
                           backgroundColor: Colors.white,
                           child: Text(
                             authProvider.user?.name
@@ -220,21 +222,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             style: TextStyle(
                               color: Color(0xFF667EEA),
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 16, // Kurangi dari 18 ke 16
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 16),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Selamat datang kembali! 👋',
+                              'Selamat datang! 👋',
                               style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 14,
+                                fontSize: 12, // Kurangi dari 14 ke 12
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -242,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               authProvider.user?.name ?? 'Wisatawan',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: 18, // Kurangi dari 22 ke 18
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -252,11 +254,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: IconButton(
-                          onPressed: () => _showModernProfileMenu(context),
-                          icon: Icon(Icons.menu, color: Colors.white, size: 24),
+                          onPressed: () => _showNotificationSheet(context),
+                          icon: Stack(
+                            children: [
+                              Icon(Icons.notifications_outlined, 
+                                   color: Colors.white, size: 22),
+                              // Notification badge
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  constraints: BoxConstraints(
+                                    minWidth: 12,
+                                    minHeight: 12,
+                                  ),
+                                  child: Text(
+                                    '3',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -303,7 +334,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Filter button
               GestureDetector(
                 onTap: () {
                   _showFilterBottomSheet();
@@ -329,7 +359,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               SizedBox(width: 8),
-              // View toggle button
               GestureDetector(
                 onTap: () {
                   _toggleViewMode();
@@ -362,11 +391,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDestinationsContent(DestinationProvider provider) {
-    // Loading state
     if (provider.destinations.isEmpty && provider.isLoading) {
       return SliverToBoxAdapter(
         child: Container(
-          height: 400,
+          height: 300,
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -389,7 +417,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    // Error state
     if (provider.error != null && provider.destinations.isEmpty) {
       return SliverToBoxAdapter(
         child: Container(
@@ -402,8 +429,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 SizedBox(height: 16),
                 Text('Terjadi Kesalahan',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text(provider.error!, textAlign: TextAlign.center),
                 SizedBox(height: 16),
                 ElevatedButton(
@@ -417,7 +443,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    // Empty state
     if (provider.destinations.isEmpty) {
       return SliverToBoxAdapter(
         child: Container(
@@ -429,8 +454,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Icon(Icons.explore_off, size: 64, color: Colors.grey.shade400),
                 SizedBox(height: 16),
                 Text('Belum ada destinasi',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text('Coba refresh atau periksa koneksi internet'),
               ],
             ),
@@ -439,7 +463,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    // Content berdasarkan view mode
     if (_isGridView) {
       return _buildGridView(provider);
     } else {
@@ -465,8 +488,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: Color(0xFF667EEA).withOpacity(0.2)),
+                    border: Border.all(color: Color(0xFF667EEA).withOpacity(0.2)),
                   ),
                   child: Center(
                     child: CircularProgressIndicator(
@@ -549,7 +571,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: EdgeInsets.all(12),
           child: Row(
             children: [
-              // Image
               Hero(
                 tag: 'destination-${destination.id}',
                 child: Container(
@@ -591,10 +612,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-
               SizedBox(width: 12),
-
-              // Content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -751,8 +769,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   SizedBox(height: 20),
-
-                  // Filter options
                   Text(
                     'Kategori:',
                     style: TextStyle(
@@ -771,9 +787,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       _buildFilterChip('Wisata Kuliner', false, () {}),
                     ],
                   ),
-
                   SizedBox(height: 20),
-
                   Text(
                     'Harga:',
                     style: TextStyle(
@@ -792,16 +806,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       _buildFilterChip('> Rp 100K', false, () {}),
                     ],
                   ),
-
                   SizedBox(height: 24),
-
-                  // Apply button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        // Implement filter logic here
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Filter diterapkan!'),
@@ -825,7 +835,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-
                   SizedBox(height: MediaQuery.of(context).padding.bottom),
                 ],
               ),
@@ -877,7 +886,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         .loadDestinations(refresh: true, search: query);
   }
 
-  void _showModernProfileMenu(BuildContext context) {
+  void _showNotificationSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -899,149 +908,99 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             SizedBox(height: 20),
-            _buildProfileMenuItem(Icons.person, 'Profile', () {
-              Navigator.pop(modalContext);
-            }),
-            _buildProfileMenuItem(Icons.settings, 'Pengaturan', () {
-              Navigator.pop(modalContext);
-            }),
-            _buildProfileMenuItem(Icons.help, 'Bantuan', () {
-              Navigator.pop(modalContext);
-            }),
-            _buildProfileMenuItem(Icons.info, 'Tentang Aplikasi', () {
-              Navigator.pop(modalContext);
-            }),
-            Divider(height: 30),
-            _buildProfileMenuItem(
-              Icons.logout,
-              'Logout',
-              () {
-                Navigator.pop(modalContext);
-                _showLogoutConfirmation(context);
-              },
-              isDestructive: true,
+            Row(
+              children: [
+                Icon(Icons.notifications, color: Color(0xFF667EEA)),
+                SizedBox(width: 12),
+                Text(
+                  'Notifikasi',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+              ],
             ),
+            SizedBox(height: 16),
+            _buildNotificationItem(
+              'Destinasi Baru',
+              'Pantai Napabale telah ditambahkan!',
+              '2 jam lalu',
+              Icons.explore,
+              Color(0xFF667EEA),
+            ),
+            _buildNotificationItem(
+              'Promo Kuliner',
+              'Diskon 20% di Warung Seafood Pak Mahmud',
+              '1 hari lalu',
+              Icons.restaurant,
+              Colors.orange,
+            ),
+            _buildNotificationItem(
+              'Update Aplikasi',
+              'Versi terbaru tersedia di Play Store',
+              '3 hari lalu',
+              Icons.system_update,
+              Colors.green,
+            ),
+            SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileMenuItem(IconData icon, String title, VoidCallback onTap,
-      {bool isDestructive = false}) {
+  Widget _buildNotificationItem(String title, String subtitle, String time, 
+                                IconData icon, Color color) {
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDestructive
-                ? Color(0xFFF56565).withOpacity(0.1)
-                : Color(0xFF667EEA).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: isDestructive ? Color(0xFFF56565) : Color(0xFF667EEA),
-            size: 20,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isDestructive ? Color(0xFFF56565) : Color(0xFF2D3748),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey.shade400,
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
       ),
-    );
-  }
-
-  Future<void> _handleLogout(BuildContext context) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final navigator = Navigator.of(context);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    try {
-      final success = await authProvider.logout();
-
-      if (mounted) {
-        if (success) {
-          navigator.pushNamedAndRemoveUntil(
-            '/login',
-            (Route<dynamic> route) => false,
-          );
-
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Logout berhasil'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-          );
-        } else {
-          authProvider.forceLogout();
-          navigator.pushNamedAndRemoveUntil(
-            '/login',
-            (Route<dynamic> route) => false,
-          );
-        }
-      }
-    } catch (e) {
-      print('Logout error: $e');
-      if (mounted) {
-        authProvider.forceLogout();
-
-        navigator.pushNamedAndRemoveUntil(
-          '/login',
-          (Route<dynamic> route) => false,
-        );
-
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Logout berhasil'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            child: Icon(icon, color: color, size: 20),
           ),
-        );
-      }
-    }
-  }
-
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text('Konfirmasi Logout'),
-          content: Text('Apakah Anda yakin ingin logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Batal'),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _handleLogout(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFF56565),
-              ),
-              child: Text('Logout', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 
